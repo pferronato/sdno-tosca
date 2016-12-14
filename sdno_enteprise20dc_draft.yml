@@ -1,0 +1,76 @@
+# enterprise to DCtosca_definitions_version: tosca_simple_yaml_1_0
+
+description: site to dc, vxlan + ipsec
+imports:
+    - sdno_ipsec_draft_v1.yml
+    - vxlan_inputs.yml
+  
+  metadata:
+    id: ent2dc
+    template_name: overlay vxlan from site to vCPE
+    version: 0.1
+    vendor: sdno
+    template_author: Pierfranco Ferronato
+    
+topology_template:
+    inputs:
+        name:
+            type: string
+        connectionId:
+            type: integer
+            description: VxLAN connection ID
+        siteCidr:
+            type: string
+            descrption: enterprise cidr
+        siteThinCpeIP:
+            type: string
+            description: mgrIP of thinCPE which access enterprise
+        vCPE_MgrIp:
+            type: string
+            description: mgrIp of vCPE, should be provided by NFVO
+        siteVNI:
+            type: integer
+            description: VxLAN ID connect site to vCPE
+            default: 20001
+        siteAccessPortVlan:
+            type: string
+            description: thinCPE port which connect to enterprise
+            default: GO/0/1.101
+                       
+        dcGWIP:
+            type: string
+            description: 
+        vpcName:
+            type: string
+            description: mgrIP of thinCPE which access enterprise
+        vCPE_MgrIp:
+            type: string
+            description: mgrIp of vCPE, should be provided by NFVO
+    outputs:
+        connectionId:
+            type: string
+            description:
+
+    node_template:
+        vxlan:
+            type:
+            requirements:
+                dependency: ipsec:
+        ipsec:
+            type:
+            
+workflows:
+    create_workflow:
+        description: 
+        steps:         
+            create_vxlan:
+                target: vxlan
+            create_ipsec:
+                target: ipsec
+    provision_workflow:
+        description: 
+        steps:         
+            create_vxlan:
+                target: vxlan
+            create_ipsec:
+                target: ipsec

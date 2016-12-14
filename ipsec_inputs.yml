@@ -1,0 +1,6 @@
+name: myIPSEC
+connectionId: 0001
+siteCidr: 10.0.1.0/24
+dcGWIP: mgrIp of dcGW
+vpcName:`vdc0/vpc1
+vCPE_MgrIp: 172.15.4.101

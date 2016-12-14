@@ -1,0 +1,7 @@
+name: myVxLAN
+connectionId:
+siteCidr: 10.0.1.0/24
+siteThinCpeIP: 
+vCPE_MgrIp: 172.15.4.101
+siteVNI: 20001
+siteAccessPortVlan: GO/0/1.101

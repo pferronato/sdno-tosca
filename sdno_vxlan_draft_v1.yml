@@ -1,0 +1,184 @@
+# Copyright 2016 Huawei Technologies Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+###############################################################################
+#####                        overlay_vxlan                                 ####
+###############################################################################
+tosca_definitions_version: tosca_simple_yaml_1_0
+description: creates an overlay vxlan from thinCPE to vCPE
+imports:
+    - tosca_base_type_definition.yaml
+
+###############################################################################
+
+metadata:
+    id: overlay_ipsec
+    template_name: overlay vxlan from thinCPE to vCPE
+    version: 0.1
+    vendor: sdno
+    template_author: Pierfranco Ferronato
+
+substitution_mappings:
+    node_type: vxlan
+
+    
+####################################### TYPES #################################
+node_types:
+    tosca.nodes.sdno.networkService:
+        derived_from: tosca.nodes.root
+
+    tosca.nodes.sdno.networkDevice:
+        derived_from: tosca.nodes.root
+
+    tosca.nodes.sdno.lifecycle.vxlan:
+        derived_from: tosca.interfaces.Root
+        create:
+            description:
+        delete:
+            description:
+        get:
+            description:
+        provision:
+            description:
+        terminate:
+            description:
+
+####################################### TOPOLOGY ##############################
+topology_template:
+    inputs:
+        name:
+            type: string
+        connectionId:
+            type: integer
+            description: VxLAN connection ID
+        siteCidr:
+            type: string
+            descrption: enterprise cidr
+        siteThinCpeIP:
+            type: string
+            description: mgrIP of thinCPE which access enterprise
+        vCPE_MgrIp:
+            type: string
+            description: mgrIp of vCPE, should be provided by NFVO
+        siteVNI:
+            type: integer
+            description: VxLAN ID connect site to vCPE
+            default: 20001
+        siteAccessPortVlan:
+            type: string
+            description: thinCPE port which connect to enterprise
+            default: GO/0/1.101
+
+    outputs:
+        connectionIdOut:
+            type: integer
+            value: {get_attribute: [vxlan, connectionId]}
+        getResultOut:
+            type: string
+            value: {get_attribute: [vxlan, provResultRsp]}
+        createResultOut:
+            type: string
+            value: {get_attribute: [vxlan, createResultRsp]}
+        deleteResultOut:
+            type: string
+            value: {get_attribute: [vxlan, deleteResultRsp]}
+        getResultOut:
+            type: string
+            value: {get_attribute: [vxlan, getResultRsp]}
+    node_templates:
+        thinCPE:
+            type: tosca.nodes.sdno.networkDevice
+            name: thinCPE
+            version: 1.0
+            properties:
+                portvlan: {get_input: siteAccessPortVlan}
+                siteCidr: {get_input: siteCdr}
+                siteThinCpeIP: {get_input: siteThinCpeIP}
+        vCPE_gw:
+            type: tosca.nodes.sdno.networkDevice
+            name: vCPE
+            version: 1.0
+            properties:
+                siteCidr: {get_input: siteCdr}
+                mgrIp: {get_input: vCPE_MgrIp}
+        vxlan:
+            type: tosca.nodes.sdno.networkService
+            description: VxLAN Access Network
+            properties:
+                name: {get_input: name}
+                siteVNI: {get_input: siteVNI}
+                connectionId: {get_input: connectionId}
+            attributes:
+                provResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.vxlan, provison, resultResp]}
+                createResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.vxlan, create, resultResp]}
+                connectionId: {get_output: [SELF, tosca.nodes.sdno.lifecycle.vxlan, create, connectionId]}
+                deleteResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.vxlan, delete, resultResp]}
+                getResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.vxlan, get, resultResp]}
+            interfaces:
+                    tosca.nodes.sdno.lifecycle.vxlan:
+                        operations:
+                            provision:
+                                implementation: scripts/rest/vxlan.provision
+                                inputs: {get_input: vpnConnections}
+                            create:
+                                inputs: {get_input: vpnConnections}
+                            delete:
+                                implementation: scripts/rest/vxlan.delete
+                                inputs: {get_input: connectionid}
+                            get:
+                                implementation: scripts/rest/vxlan.get
+                                inputs: {get_input: connectionid}
+            requirements:
+                dependancy: thinCPE
+                dependancy: vCPE_gw
+
+####################################### workflow ##############################
+workflows:
+    create_workflow:
+        description: it will create vxlan specified in requests
+        steps:
+            create_vxlan:
+                target: vxlan_node
+                activities:
+                    - set_state: creating
+                    - call_operation: tosca.nodes.sdno.lifecycle.vxlan.create
+                    - set_state: created
+                    
+    provision_workflow:
+        description: it will provision vxlan specified in requests
+        steps:
+            provision_vxlan:
+                target: vxlan_node
+                activities:
+                    - set_state: provisioning
+                    - call_operation: tosca.nodes.sdno.lifecycle.vxlan.provision
+                    - set_state: provisioned
+                    
+    delete_workflow:
+        description: Delete a specified vxlan
+        steps:
+            delete_vxlan:
+                target: vxlan_node
+                activities:
+                    - set_state: deleting
+                    - call_operation: tosca.sdno.node.lifecycle.vxlan.delete
+                    - set_state: deleted
+                    
+    get_workflow:
+        description: get connections from VxLAN
+        steps:
+            get_vxlan:
+                target: vxlan_node
+                activities:
+                    - call_operation: tosca.nodes.sdno.lifecycle.vxlan.get

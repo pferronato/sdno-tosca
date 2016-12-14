@@ -1,0 +1,204 @@
+# Copyright 2016 Huawei Technologies Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+###############################################################################
+#####                        IPSEC                                         ####
+###############################################################################
+tosca_definitions_version: tosca_simple_yaml_1_0
+description: creates an Access Network across site and vcpe gateway
+imports:
+    - tosca_base_type_definition.yaml
+
+###############################################################################
+
+metadata:
+    id: Overlay_IPSEC
+    template_name: virtualCPE_to_vpc
+    version: 0.1
+    vendor: sdno
+    template_author: Pierfranco Ferronato
+
+substitution_mappings:
+    node_type: ipsec
+
+    
+####################################### TYPES #################################
+node_types:
+    tosca.nodes.sdno.networkService:
+        derived_from: tosca.nodes.Root
+
+    tosca.nodes.sdno.networkDevice:
+        derived_from: tosca.nodes.Root
+
+    tosca.nodes.sdno.lifecycle.Ipsec:
+        derived_from: tosca.interfaces.Root
+        create:
+            description:
+        delete:
+            description:
+        get:            # not used
+            description:
+        provision:
+            description:
+        terminate:
+            description:
+
+####################################### TOPOLOGY ##############################
+topology_template:
+    inputs:
+        name:
+            type: string
+        connectionId:
+            type: integer
+            description: IPSEC connection ID
+        siteCidr:
+            type: string
+            descrption: enterprise cidr
+        dcGWIP:
+            type: string
+            description: 
+        vpcName:
+            type: string
+            description: mgrIP of thinCPE which access enterprise
+        vCPE_MgrIp:
+            type: string
+            description: mgrIp of vCPE, should be provided by NFVO
+
+    outputs:
+        getResultOut:
+            type: string
+            value: {get_attribute: [vxlan, provResultRsp]}
+        createResultOut:
+            type: string
+            value: {get_attribute: [vxlan, createResultRsp]}
+        deleteResultOut:
+            type: string
+            value: {get_attribute: [vxlan, deleteResultRsp]}
+        getResultOut:
+            type: string
+            value: {get_attribute: [vxlan, getResultRsp]}
+    node_templates:
+        vpc_ac:
+            type: tosca.nodes.sdno.networkDevice
+            name: vpc_ac
+            version: 1.0
+            properties:
+                vpcName: {get_input: vpcName}
+                dcGWIP: {get_input: dcGWIP}
+        vCPE_gw:
+            type: tosca.nodes.sdno.networkDevice
+            name: vCPE
+            version: 1.0
+            properties:
+                siteCidr: {get_input: siteCdr}
+                mgrIp: {get_input: vCPE_MgrIp}
+        ipsec:
+            type: tosca.nodes.sdno.networkService
+            description: VxLAN Access Network
+            properties:
+                name: {get_input: name}
+                connectionId: {get_input: connectionId}
+            attributes:
+                provResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.ipsec, provison, resultResp]}
+                createResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.ipsec, create, resultResp]}  
+                deleteResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.ipsec, delete, resultResp]}  
+                getResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.ipsec, get, resultResp]}
+            interfaces:
+                    tosca.nodes.sdno.lifecycle.ipsec:
+                        operations:
+                            provision:
+                                implementation: scripts/rest/vxlan.provision
+                                inputs: {get_input: vpnConnections}
+                            create:
+                                inputs: {get_input: vpnConnections}
+                            delete:
+                                implementation: scripts/rest/vxlan.delete
+                                inputs: {get_input: connectionid}
+                            get:
+                                implementation: scripts/rest/vxlan.get
+                                inputs: {get_input: connectionid}
+                            terminate:
+                                implementation: scripts/rest/vxlan.terminate
+                                inputs: {get_input: connectionid}
+            requirements:
+                dependancy: thinCPE
+                dependancy: vCPE_gw
+
+####################################### workflow ##############################
+workflows:
+    create_workflow:
+        description: it will create ipsec specified in requests
+        steps:
+            create_ipsec:
+                target: ipsec
+                activities:
+                    - set_state: creating
+                    - call_operation: tosca.nodes.sdno.lifecycle.create
+                    - set_state: created
+
+    provision_workflow:
+        description: it will provision ipsec specified in requests
+        steps:
+            provision_ipsec:
+                target: ipsec
+                activities:
+                    - set_state: provisioning
+                    - call_operation: tosca.nodes.sdno.lifecycle.ipsec.provision
+                    - set_state: provisioned
+                    
+    delete_workflow:
+        description: Delete a specified ipsec
+        steps:
+            delete_ipsec:
+                target: ipsec
+                activities:
+                    - set_state: deleting
+                    - call_operation: tosca.sdno.node.lifecycle.ipsec.delete
+                    - set_state: deleted
+                    
+    get_workflow:
+        description: get connections from ipsec
+        steps:
+            get_ipsec:
+                target: ipsec
+                activities:
+                    - call_operation: tosca.nodes.sdno.lifecycle.ipsec.get
+    terminate_workflow:
+        description:
+        steps:
+            terminate_ipsec:
+                target: ipsec
+                activities:
+                    - set_state: derminating
+                    - call_operation: tosca.nodes.sdno.lifecycle.ipsed.terminate
+                    - set_state: terminated
+
+    provisionViaCreated_workflow:
+        description:
+        steps:
+            create_ipsec:
+                target: ipsec
+                activities:
+                    - inline: create_workflow
+                    - inline: provision_workflow
+    
+    deleteViaTerminated_workflow:
+        description:
+        steps:
+            terminate_ipsec:
+                target: ipsec
+                activities:
+                    - inline: terminate_workflow
+                    - inline: delete_workflow
+            
