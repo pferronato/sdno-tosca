@@ -1,0 +1,96 @@
+# Copyright 2016 Huawei Technologies Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+###############################################################################
+#####                        vxlan                                         ####
+###############################################################################
+tosca_definitions_version: tosca_simple_yaml_1_0
+description: creates an vxlan to drivers, this is a tentative draft specification to try to 
+imports:
+    - tosca_base_type_definition.yaml
+
+###############################################################################
+
+metadata:
+    id: vxlan
+    template_name: vxlan specification
+    version: 0.1
+    vendor: sdno
+    template_author: Pierfranco Ferronato
+
+    
+dsl_definitions:
+    srv_capa_names: &SRV_CAPA_NAMES
+        # list from [vxlan, ipsec, vpc, sfc] TBD
+data_types:
+
+####################################### TYPES #################################
+
+node_types:
+    # defines the generic network service node
+    tosca.nodes.sdno.networkService:
+        derived_from: tosca.nodes.root
+        requirements:
+            
+    # defines the capabilities, that will be exposed by the drivers, that will be linked from networkservices's requirements 
+    tosca.capabilities.networkservice:
+        derived_from: tosca.capabilities.Root
+        properties:
+            srv_name:
+                type: string
+                valid_values: *SRV_CAPA_NAMES
+            required: true
+    valid_source_types: tosca.nodes.sdno.networkService
+     
+    #defines abstract driver that exposed network service capabilites
+    sdno_driver:
+        derive_from: tosca.nodes.Root
+        description: node representing a generic driver
+    inputs:
+    capabilities:
+        # this needs to be a list of capabilities
+        - tosca.capabilities.networkservice
+
+    # define the standard lifecycle of drivers
+    tosca.nodes.sdno.lifecycle.driver:
+        derived_from: tosca.interfaces.Root
+        get:
+            description:
+        provision:
+            description:
+        terminate:
+            description:
+
+####################################### TOPOLOGY ##############################
+
+topology_template:
+    input:
+    output:
+    node_template:
+        # huawei overlay driver, it supports vxlan and ipsec
+        huawei.overlay_drv:
+            type: sdno_driver
+            description:
+            capabilites:
+                - vxlan
+                - ipsec
+        sdno-overlay_vxlan:
+            type: tosca.nodes.sdno.lifecycle.vxlan
+            requirements:
+                - huawei.overlay_drv
+
+workflow:                
+        
+                
+           
