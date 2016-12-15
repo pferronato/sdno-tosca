@@ -18,7 +18,7 @@
 tosca_definitions_version: tosca_simple_yaml_1_0
 description: creates an Access Network across site and vcpe gateway
 imports:
-    - tosca_base_type_definition.yaml
+    - types/tosca_base_type_definition.yaml
 
 ###############################################################################
 
@@ -34,6 +34,8 @@ substitution_mappings:
 
     
 ####################################### TYPES #################################
+# to be imported from external file
+
 node_types:
     tosca.nodes.sdno.networkService:
         derived_from: tosca.nodes.Root
@@ -54,6 +56,30 @@ node_types:
         terminate:
             description:
 
+    tosca.nodes.sdno.networkDevice.vpc:
+        derive_from: tosca.nodes.sdno.networkDevice
+        name: vpc_ac
+        version: 1.0
+        properties:
+            vpcName:
+                type: string
+                description:
+            dcGWIP:
+                type: string
+                description:
+
+     tosca.nodes.sdno.networkDevice.vCPE:
+        derive_from: tosca.nodes.sdno.networkDevice
+        version: 1.0
+        description:
+        properties:
+            siteCidr:
+                type: string
+                description:
+            mgrIp:
+                type: string
+                description:
+            
 ####################################### TOPOLOGY ##############################
 topology_template:
     inputs:
@@ -90,14 +116,14 @@ topology_template:
             value: {get_attribute: [vxlan, getResultRsp]}
     node_templates:
         vpc_ac:
-            type: tosca.nodes.sdno.networkDevice
+            type: tosca.nodes.sdno.networkDevice.vpc
             name: vpc_ac
             version: 1.0
             properties:
                 vpcName: {get_input: vpcName}
                 dcGWIP: {get_input: dcGWIP}
         vCPE_gw:
-            type: tosca.nodes.sdno.networkDevice
+            type: tosca.nodes.sdno.networkDevice.vCPE
             name: vCPE
             version: 1.0
             properties:

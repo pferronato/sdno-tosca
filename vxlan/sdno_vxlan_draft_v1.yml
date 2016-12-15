@@ -18,7 +18,7 @@
 tosca_definitions_version: tosca_simple_yaml_1_0
 description: creates an overlay vxlan from thinCPE to vCPE
 imports:
-    - tosca_base_type_definition.yaml
+    - types/tosca_base_type_definition.yaml
 
 ###############################################################################
 
@@ -34,6 +34,11 @@ substitution_mappings:
 
     
 ####################################### TYPES #################################
+# to be imported from external file
+
+data_types:
+
+
 node_types:
     tosca.nodes.sdno.networkService:
         derived_from: tosca.nodes.root
@@ -54,6 +59,32 @@ node_types:
         terminate:
             description:
 
+    tosca.nodes.sdno.networkDevice.thinCPE: 
+        derive_from: tosca.nodes.sdno.networkDevice
+        version: 1.0
+        description:
+        properties:
+            portvlan:
+                type: string
+                description:
+            siteCidr:
+                type: string
+                description:
+            siteThinCpeIP:
+                type: string
+                description:
+
+     tosca.nodes.sdno.networkDevice.vCPE:
+        type: tosca.nodes.sdno.networkDevice
+        version: 1.0
+        description:
+        properties:
+            siteCidr:
+                type: string
+                description:
+            mgrIp:
+                type: string
+                description:
 ####################################### TOPOLOGY ##############################
 topology_template:
     inputs:
@@ -62,6 +93,10 @@ topology_template:
         connectionId:
             type: integer
             description: VxLAN connection ID
+        siteVNI:
+            type: integer
+            description: VxLAN ID connect site to vCPE
+            default: 20001
         siteCidr:
             type: string
             descrption: enterprise cidr
@@ -71,10 +106,6 @@ topology_template:
         vCPE_MgrIp:
             type: string
             description: mgrIp of vCPE, should be provided by NFVO
-        siteVNI:
-            type: integer
-            description: VxLAN ID connect site to vCPE
-            default: 20001
         siteAccessPortVlan:
             type: string
             description: thinCPE port which connect to enterprise
@@ -98,17 +129,14 @@ topology_template:
             value: {get_attribute: [vxlan, getResultRsp]}
     node_templates:
         thinCPE:
-            type: tosca.nodes.sdno.networkDevice
-            name: thinCPE
-            version: 1.0
+            type: tosca.nodes.sdno.networkDevice.thinCPE
             properties:
                 portvlan: {get_input: siteAccessPortVlan}
                 siteCidr: {get_input: siteCdr}
                 siteThinCpeIP: {get_input: siteThinCpeIP}
         vCPE_gw:
-            type: tosca.nodes.sdno.networkDevice
+            type: tosca.nodes.sdno.networkDevice.vCPE
             name: vCPE
-            version: 1.0
             properties:
                 siteCidr: {get_input: siteCdr}
                 mgrIp: {get_input: vCPE_MgrIp}
