@@ -1,10 +1,10 @@
-# enterprise to DCtosca_definitions_version: tosca_simple_yaml_1_0
+# example VxLAN + IPSEC
 
 description: site to dc, vxlan + ipsec
 imports:
-    - sdno_ipsec_draft_v1.yml
-    - vxlan_inputs.yml
-  
+    - sdno_overlayipsec.yaml
+    - sdno_overlayvxlan.yaml
+ 
   metadata:
     id: ent2dc
     template_name: overlay vxlan from site to vCPE
@@ -52,13 +52,13 @@ topology_template:
             description:
 
     node_template:
-        vxlan:
-            type:
+        myVxlan:
+            type: tosca.nodes.sdno.vxlan
             requirements:
                 dependency: ipsec:
-        ipsec:
-            type:
-            
+        MyOpsec:
+            type: tosca.nodes.sdno.ipsec
+
 workflows:
     create_workflow:
         description: 

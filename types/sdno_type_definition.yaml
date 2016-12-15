@@ -1,3 +1,21 @@
+# Copyright 2016 Huawei Technologies Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# 
+tosca_definitions_version: tosca_simple_yaml_1_0
+description: sdno basic types
+imports:
+    - tosca_base_type_definition.yaml
+
 node_types:
     tosca.nodes.sdno.networkService:
         derived_from: tosca.nodes.root
@@ -12,6 +30,19 @@ node_types:
         delete:
             description:
         get:
+            description: 
+        provision:
+            description:
+        terminate:
+            description:
+
+    tosca.nodes.sdno.lifecycle.Ipsec:
+        derived_from: tosca.interfaces.Root
+        create:
+            description:
+        delete:
+            description:
+        get:            # not used
             description:
         provision:
             description:
@@ -33,6 +64,18 @@ node_types:
                 type: string
                 description:
 
+    tosca.nodes.sdno.networkDevice.vpc:
+        derive_from: tosca.nodes.sdno.networkDevice
+        name: vpc_ac
+        version: 1.0
+        properties:
+            vpcName:
+                type: string
+                description:
+            dcGWIP:
+                type: string
+                description:
+                
      tosca.nodes.sdno.networkDevice.vCPE:
         type: tosca.nodes.sdno.networkDevice
         version: 1.0
