@@ -129,6 +129,7 @@ topology_template:
         TerminateResultOut:
             type: string
             value: {get_attribute: [vxlan, terminateResultRsp]}
+            
     node_templates:
         thinCPE:
             type: tosca.nodes.sdno.networkDevice.thinCPE
