@@ -19,6 +19,7 @@ tosca_definitions_version: tosca_simple_yaml_1_0
 description: creates an overlay vxlan from thinCPE to vCPE
 imports:
     - tosca_base_type_definition.yaml
+    - types/sdno_type_definition.yaml
 
 ###############################################################################
 

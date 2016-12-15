@@ -1,0 +1,46 @@
+node_types:
+    tosca.nodes.sdno.networkService:
+        derived_from: tosca.nodes.root
+
+    tosca.nodes.sdno.networkDevice:
+        derived_from: tosca.nodes.root
+
+    tosca.nodes.sdno.lifecycle.vxlan:
+        derived_from: tosca.interfaces.Root
+        create:
+            description:
+        delete:
+            description:
+        get:
+            description:
+        provision:
+            description:
+        terminate:
+            description:
+
+    tosca.nodes.sdno.networkDevice.thinCPE: 
+        derive_from: tosca.nodes.sdno.networkDevice
+        version: 1.0
+        description:
+        properties:
+            portvlan:
+                type: string
+                description:
+            siteCidr:
+                type: string
+                description:
+            siteThinCpeIP:
+                type: string
+                description:
+
+     tosca.nodes.sdno.networkDevice.vCPE:
+        type: tosca.nodes.sdno.networkDevice
+        version: 1.0
+        description:
+        properties:
+            siteCidr:
+                type: string
+                description:
+            mgrIp:
+                type: string
+                description:

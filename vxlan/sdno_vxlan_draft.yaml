@@ -71,7 +71,11 @@ node_types:
             description:
         terminate:
             description:
+        # uncertain if we want to model it
+        getControllerId:
+            description: it returns the controllerId
 
+        # relationship missing
 ####################################### TOPOLOGY ##############################
 
 topology_template:
@@ -79,7 +83,7 @@ topology_template:
     output:
     node_template:
         # huawei overlay driver, it supports vxlan and ipsec
-        huawei.overlay_drv:
+        huawei_overlay_drv:
             type: sdno_driver
             description:
             capabilites:
@@ -87,10 +91,40 @@ topology_template:
                 - ipsec
         sdno-overlay_vxlan:
             type: tosca.nodes.sdno.lifecycle.vxlan
+            interfaces:
+                tosca.nodes.sdno.lifecycle.driver:
+                    operations:
+                        provision:
+                            implementation: scripts/drivers.vxlan.swagger.yml
+                            inputs:
+                        terminate:
+                            implementation: scripts/drivers.vxlan.swagger.yml
+                            inputs:
+                        # uncertain if we want to model it
+                        getControllerId: 
+                            inputs:
             requirements:
-                - huawei.overlay_drv
+                - networkservice: huawei.overlay_drv
 
 workflow:                
-        
-                
-           
+    provision_workflow:
+        description: it will create vxlan specified in requests
+        steps:
+            getControllerId:
+            # id dunno yet if it's to be added here
+                target: overlay_drv
+                    activities:
+                        - call_operation: tosca.nodes.sdno.lifecycle.driver.getController
+            createVxLan:
+                target: sdno-overlay_vxlan
+                activities:
+                    # change state is not defined because it's implemented by the nslcm
+                    - call_operation: tosca.nodes.sdno.lifecycle.driver.provision
+               
+    terminate_workflow:
+        description:
+        steps:
+            terminate:
+                target: overlay_drv
+                    - call_operation: 
+            
