@@ -18,12 +18,12 @@
 tosca_definitions_version: tosca_simple_yaml_1_0
 description: creates an overlay vxlan from thinCPE to vCPE
 imports:
-    - types/tosca_base_type_definition.yaml
+    - tosca_base_type_definition.yaml
 
 ###############################################################################
 
 metadata:
-    id: overlay_ipsec
+    id: overlay_vxlan
     template_name: overlay vxlan from thinCPE to vCPE
     version: 0.1
     vendor: sdno
@@ -31,7 +31,6 @@ metadata:
 
 substitution_mappings:
     node_type: vxlan
-
     
 ####################################### TYPES #################################
 # to be imported from external file
@@ -127,6 +126,9 @@ topology_template:
         getResultOut:
             type: string
             value: {get_attribute: [vxlan, getResultRsp]}
+        TerminateResultOut:
+            type: string
+            value: {get_attribute: [vxlan, terminateResultRsp]}
     node_templates:
         thinCPE:
             type: tosca.nodes.sdno.networkDevice.thinCPE
@@ -153,20 +155,24 @@ topology_template:
                 connectionId: {get_output: [SELF, tosca.nodes.sdno.lifecycle.vxlan, create, connectionId]}
                 deleteResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.vxlan, delete, resultResp]}
                 getResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.vxlan, get, resultResp]}
+                terminateResultRsp: [get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.vxlan, terminate, resultResp]]
             interfaces:
                     tosca.nodes.sdno.lifecycle.vxlan:
                         operations:
                             provision:
-                                implementation: scripts/rest/vxlan.provision
+                                implementation: scripts/rest/vxlan.swagger.jml
                                 inputs: {get_input: vpnConnections}
                             create:
                                 inputs: {get_input: vpnConnections}
                             delete:
-                                implementation: scripts/rest/vxlan.delete
+                                implementation: scripts/rest/vxlan.swagger.jml
                                 inputs: {get_input: connectionid}
                             get:
-                                implementation: scripts/rest/vxlan.get
+                                implementation: scripts/rest/vxlan.swagger.jml
                                 inputs: {get_input: connectionid}
+                            terminate:
+                                implementation: scripts/rest/vxlan.swagger.jml
+                                input: {get_input: connectionid}
             requirements:
                 dependancy: thinCPE
                 dependancy: vCPE_gw
@@ -210,3 +216,32 @@ workflows:
                 target: vxlan_node
                 activities:
                     - call_operation: tosca.nodes.sdno.lifecycle.vxlan.get
+
+                        terminate_workflow:
+        description:
+        steps:
+            terminate_ipsec:
+                target: ipsec
+                activities:
+                    - set_state: derminating
+                    - call_operation: tosca.nodes.sdno.lifecycle.ipsed.terminate
+                    - set_state: terminated
+
+    provisionViaCreated_workflow:
+        description:
+        steps:
+            create_vxlan:
+                target: vxlan
+                activities:
+                    - inline: create_workflow
+                    - inline: provision_workflow
+    
+    deleteViaTerminated_workflow:
+        description:
+        steps:
+            terminate_vxlan:
+                target: vxlan
+                activities:
+                    - inline: terminate_workflow
+                    - inline: delete_workflow
+            

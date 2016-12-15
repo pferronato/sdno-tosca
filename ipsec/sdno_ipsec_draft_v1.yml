@@ -18,12 +18,12 @@
 tosca_definitions_version: tosca_simple_yaml_1_0
 description: creates an Access Network across site and vcpe gateway
 imports:
-    - types/tosca_base_type_definition.yaml
+    - tosca_base_type_definition.yaml
 
 ###############################################################################
 
 metadata:
-    id: Overlay_IPSEC
+    id: overlay_ipsec
     template_name: virtualCPE_to_vpc
     version: 0.1
     vendor: sdno
@@ -114,6 +114,9 @@ topology_template:
         getResultOut:
             type: string
             value: {get_attribute: [vxlan, getResultRsp]}
+        terminateResult:
+            type: string
+            value: {get_attribute: [vxlan, terminateResultRsp]}
     node_templates:
         vpc_ac:
             type: tosca.nodes.sdno.networkDevice.vpc
@@ -144,18 +147,18 @@ topology_template:
                     tosca.nodes.sdno.lifecycle.ipsec:
                         operations:
                             provision:
-                                implementation: scripts/rest/vxlan.provision
+                                implementation: scripts/rest/ipsec.swagger.jml
                                 inputs: {get_input: vpnConnections}
                             create:
                                 inputs: {get_input: vpnConnections}
                             delete:
-                                implementation: scripts/rest/vxlan.delete
+                                implementation: scripts/rest/ipsec.swagger.jml
                                 inputs: {get_input: connectionid}
                             get:
-                                implementation: scripts/rest/vxlan.get
+                                implementation: scripts/rest/ipsec.swagger.jml
                                 inputs: {get_input: connectionid}
                             terminate:
-                                implementation: scripts/rest/vxlan.terminate
+                                implementation: scripts/rest/ipsec.swagger.jml
                                 inputs: {get_input: connectionid}
             requirements:
                 dependancy: thinCPE
