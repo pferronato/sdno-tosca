@@ -79,7 +79,7 @@ node_types:
                 type: string
                 description:
                 
-     tosca.nodes.sdno.networkDevice.vCPE:
+    tosca.nodes.sdno.networkDevice.vCPE:
         type: tosca.nodes.sdno.networkDevice
         version: 1.0
         description:

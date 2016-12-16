@@ -85,7 +85,7 @@ topology_template:
                         operations:
                             provision:
                                 implementation: scripts/rest/ipsec.swagger.jml
-                                inputs: {get_input: vpnConnections}
+                                # inputs: {get_input: vpnConnections}
                             create:
                                 inputs: {get_input: vpnConnections}
                             delete:

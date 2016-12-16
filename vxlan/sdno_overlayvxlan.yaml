@@ -3,9 +3,9 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,7 +63,7 @@ topology_template:
         connectionId:
             type: integer
             value: {get_attribute: [vxlan, connectionId]}
-            
+
     node_templates:
         thinCPE:
             type: tosca.nodes.sdno.networkDevice.thinCPE
@@ -90,7 +90,7 @@ topology_template:
                         operations:
                             provision:
                                 implementation: scripts/rest/vxlan.swagger.jml
-                                inputs: {get_input: vpnConnections}
+                                # inputs: {get_input: vpnConnections}
                             create:
                                 inputs: {get_input: vpnConnections}
                             delete:
@@ -111,10 +111,10 @@ workflows:
     create:
         description: it will create vxlan specified in requests
         preconditions:
-            - target: vxlan
+            target: vxlan
             condition:
                 - assert:
-                    - state: [{equal: nonexistent]
+                    - state: [{equal: nonexistent}]
         steps:
             create_vxlan:
                 target: vxlan
@@ -122,11 +122,11 @@ workflows:
                     - set_state: creating
                     - call_operation: tosca.nodes.sdno.lifecycle.vxlan.create
                     - set_state: created
-                    
+
     provision:
         description: it will provision vxlan specified in requests
         preconditions:
-            - target: vxlan
+            target: vxlan
             condition:
                 - assert:
                     - state: [{equal: created}]
@@ -137,14 +137,14 @@ workflows:
                     - set_state: provisioning
                     - call_operation: tosca.nodes.sdno.lifecycle.vxlan.provision
                     - set_state: provisioned
-                    
+
     delete:
         description: Delete a specified vxlan
         preconditions:
-            - target: vxlan
+            target: vxlan
             condition:
                 - assert:
-                    - state: [{valid_values: [created, provisioned]]        
+                    - state: [{valid_values: [created, provisioned]}]
         steps:
             delete_vxlan:
                 target: vxlan
@@ -152,14 +152,14 @@ workflows:
                     - set_state: deleting
                     - call_operation: tosca.sdno.node.lifecycle.vxlan.delete
                     - set_state: deleted
-                    
+
     get:
         description: get connections from VxLAN
         preconditions:
-            - target: vxlan
+            target: vxlan
             condition:
                 - assert:
-                    - state: [{valid_values: [created, provisioned]]        
+                    - state: [{valid_values: [created, provisioned]}]
         steps:
             get_vxlan:
                 target: vxlan
@@ -167,13 +167,13 @@ workflows:
                     - call_operation: tosca.nodes.sdno.lifecycle.vxlan.get
 
     terminate:
-        description:
+        description: ert wert wert wer 
         preconditions:
-            - target: vxlan
+            target: vxlan
             condition:
                 - assert:
                     - state: [{equal: provisioned}]
-         steps:
+        steps:
             terminate_vxlan:
                 target: vxlan
                 activities:
@@ -184,21 +184,21 @@ workflows:
     provisionViaCreated:
         description:
         preconditions:
-            - target: vxlan
+            target: vxlan
             condition:
                 - assert:
-                    - state: [{valid_values: [nonesistent]]        
+                    - state: [{valid_values: [nonesistent]}]
         steps:
             create_vxlan:
                 target: vxlan
                 activities:
                     - inline: create_workflow
                     - inline: provision_workflow
-    
+
     deleteViaTerminated:
         description:
         preconditions:
-            - target: vxlan
+            target: vxlan
             condition:
                 - assert:
                     - state: [{valid_values: [provisioned]}]
@@ -208,4 +208,3 @@ workflows:
                 activities:
                     - inline: terminate_workflow
                     - inline: delete_workflow
-            
