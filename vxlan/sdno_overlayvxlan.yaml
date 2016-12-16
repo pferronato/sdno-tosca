@@ -18,8 +18,7 @@
 tosca_definitions_version: tosca_simple_yaml_1_0
 description: creates an overlay vxlan from thinCPE to vCPE
 imports:
-    - tosca_base_type_definition.yaml
-    - types/sdno_type_definition.yaml
+     - types/sdno_type_definition.yaml
 
 ###############################################################################
 
@@ -30,8 +29,9 @@ metadata:
     vendor: sdno
     template_author: Pierfranco Ferronato
 
-substitution_mappings:
-    node_type: vxlan
+# not supported in aria
+# substitution_mappings:
+#    node_type: vxlan
 
 ####################################### TOPOLOGY ##############################
 topology_template:
@@ -47,7 +47,7 @@ topology_template:
             default: 20001
         siteCidr:
             type: string
-            descrption: enterprise cidr
+            description: enterprise cidr
         siteThinCpeIP:
             type: string
             description: mgrIP of thinCPE which access enterprise
@@ -69,16 +69,15 @@ topology_template:
             type: tosca.nodes.sdno.networkDevice.thinCPE
             properties:
                 portvlan: {get_input: siteAccessPortVlan}
-                siteCidr: {get_input: siteCdr}
+                siteCidr: {get_input: siteCidr}
                 siteThinCpeIP: {get_input: siteThinCpeIP}
         vCPE_gw:
             type: tosca.nodes.sdno.networkDevice.vCPE
-            name: vCPE
             properties:
-                siteCidr: {get_input: siteCdr}
+                siteCidr: {get_input: siteCidr}
                 mgrIp: {get_input: vCPE_MgrIp}
         vxlan:
-            type: tosca.nodes.sdno.networkService
+            type: tosca.nodes.sdno.networkService.vxlan
             description: VxLAN Access Network
             properties:
                 name: {get_input: name}
@@ -103,8 +102,8 @@ topology_template:
                                 implementation: scripts/rest/vxlan.swagger.jml
                                 input: {get_input: connectionid}
             requirements:
-                dependancy: thinCPE
-                dependancy: vCPE_gw
+                - dependency: thinCPE
+                - dependency: vCPE_gw
 
 ####################################### workflows #############################
 workflows:

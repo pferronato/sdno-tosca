@@ -13,48 +13,60 @@
 # 
 tosca_definitions_version: tosca_simple_yaml_1_0
 description: sdno basic types
-imports:
-    - tosca_base_type_definition.yaml
+
+# imports:
+#    - tosca_base_type_definition.yaml
 
 data_types:
         
     
 node_types:
     tosca.nodes.sdno.networkService:
-        derived_from: tosca.nodes.root
+        derived_from: tosca.nodes.Root
+        properties:
+            name:
+               type: string
+
+    tosca.nodes.sdno.networkService.vxlan:
+            derived_from: tosca.nodes.sdno.networkService
+            description: VxLAN Access Network
+            interfaces:
+                tosca.nodes.sdno.lifecycle.vxlan:
+                        create:
+                             description:
+                        delete:
+                             description:
+                        get:
+                             description: 
+                        provision:
+                             description:
+                        terminate:
+                             description:
+            properties:
+                siteVNI:
+                   type: string
+
 
     tosca.nodes.sdno.networkDevice:
-        derived_from: tosca.nodes.root
-
-    tosca.nodes.sdno.lifecycle.vxlan:
-        derived_from: tosca.interfaces.Root
-        create:
-            description:
-        delete:
-            description:
-        get:
-            description: 
-        provision:
-            description:
-        terminate:
-            description:
+        derived_from: tosca.nodes.Root
 
     tosca.nodes.sdno.lifecycle.Ipsec:
-        derived_from: tosca.interfaces.Root
-        create:
-            description:
-        delete:
-            description:
-        get:
-            description:
-        provision:
-            description:
-        terminate:
-            description:
+        derived_from: tosca.nodes.Root
+        interfaces:
+            sdno.interfaces:
+                create:
+                    description:
+                delete:
+                    description:
+                get:
+                    description:
+                provision:
+                    description:
+                terminate:
+                    description:
 
     tosca.nodes.sdno.networkDevice.thinCPE: 
-        derive_from: tosca.nodes.sdno.networkDevice
-        version: 1.0
+        derived_from: tosca.nodes.sdno.networkDevice
         description:
         properties:
             portvlan:
@@ -68,9 +80,7 @@ node_types:
                 description:
 
     tosca.nodes.sdno.networkDevice.vpc:
-        derive_from: tosca.nodes.sdno.networkDevice
-        name: vpc_ac
-        version: 1.0
+        derived_from: tosca.nodes.sdno.networkDevice
         properties:
             vpcName:
                 type: string
@@ -80,8 +90,7 @@ node_types:
                 description:
                 
     tosca.nodes.sdno.networkDevice.vCPE:
-        type: tosca.nodes.sdno.networkDevice
-        version: 1.0
+        derived_from: tosca.nodes.sdno.networkDevice
         description:
         properties:
             siteCidr:
