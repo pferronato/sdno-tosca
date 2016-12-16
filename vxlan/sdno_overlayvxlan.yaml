@@ -32,11 +32,6 @@ metadata:
 
 substitution_mappings:
     node_type: vxlan
-    
-####################################### TYPES #################################
-# to be imported from external file
-
-data_types:
 
 ####################################### TOPOLOGY ##############################
 topology_template:
@@ -65,24 +60,9 @@ topology_template:
             default: GO/0/1.101
 
     outputs:
-        connectionIdOut:
+        connectionId:
             type: integer
             value: {get_attribute: [vxlan, connectionId]}
-        getResultOut:
-            type: string
-            value: {get_attribute: [vxlan, provResultRsp]}
-        createResultOut:
-            type: string
-            value: {get_attribute: [vxlan, createResultRsp]}
-        deleteResultOut:
-            type: string
-            value: {get_attribute: [vxlan, deleteResultRsp]}
-        getResultOut:
-            type: string
-            value: {get_attribute: [vxlan, getResultRsp]}
-        TerminateResultOut:
-            type: string
-            value: {get_attribute: [vxlan, terminateResultRsp]}
             
     node_templates:
         thinCPE:
@@ -103,14 +83,8 @@ topology_template:
             properties:
                 name: {get_input: name}
                 siteVNI: {get_input: siteVNI}
-                connectionId: {get_input: connectionId}
             attributes:
-                provResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.vxlan, provison, resultResp]}
-                createResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.vxlan, create, resultResp]}
                 connectionId: {get_output: [SELF, tosca.nodes.sdno.lifecycle.vxlan, create, connectionId]}
-                deleteResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.vxlan, delete, resultResp]}
-                getResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.vxlan, get, resultResp]}
-                terminateResultRsp: [get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.vxlan, terminate, resultResp]]
             interfaces:
                     tosca.nodes.sdno.lifecycle.vxlan:
                         operations:
@@ -132,20 +106,30 @@ topology_template:
                 dependancy: thinCPE
                 dependancy: vCPE_gw
 
-####################################### workflow ##############################
+####################################### workflows #############################
 workflows:
-    create_workflow:
+    create:
         description: it will create vxlan specified in requests
+        preconditions:
+            - target: vxlan
+            condition:
+                - assert:
+                    - state: [{equal: nonexistent]
         steps:
             create_vxlan:
-                target: vxlan_node
+                target: vxlan
                 activities:
                     - set_state: creating
                     - call_operation: tosca.nodes.sdno.lifecycle.vxlan.create
                     - set_state: created
                     
-    provision_workflow:
+    provision:
         description: it will provision vxlan specified in requests
+        preconditions:
+            - target: vxlan
+            condition:
+                - assert:
+                    - state: [{equal: created}]
         steps:
             provision_vxlan:
                 target: vxlan_node
@@ -154,36 +138,56 @@ workflows:
                     - call_operation: tosca.nodes.sdno.lifecycle.vxlan.provision
                     - set_state: provisioned
                     
-    delete_workflow:
+    delete:
         description: Delete a specified vxlan
+        preconditions:
+            - target: vxlan
+            condition:
+                - assert:
+                    - state: [{valid_values: [created, provisioned]]        
         steps:
             delete_vxlan:
-                target: vxlan_node
+                target: vxlan
                 activities:
                     - set_state: deleting
                     - call_operation: tosca.sdno.node.lifecycle.vxlan.delete
                     - set_state: deleted
                     
-    get_workflow:
+    get:
         description: get connections from VxLAN
+        preconditions:
+            - target: vxlan
+            condition:
+                - assert:
+                    - state: [{valid_values: [created, provisioned]]        
         steps:
             get_vxlan:
-                target: vxlan_node
+                target: vxlan
                 activities:
                     - call_operation: tosca.nodes.sdno.lifecycle.vxlan.get
 
-                        terminate_workflow:
+    terminate:
         description:
-        steps:
-            terminate_ipsec:
-                target: ipsec
+        preconditions:
+            - target: vxlan
+            condition:
+                - assert:
+                    - state: [{equal: provisioned}]
+         steps:
+            terminate_vxlan:
+                target: vxlan
                 activities:
                     - set_state: derminating
-                    - call_operation: tosca.nodes.sdno.lifecycle.ipsed.terminate
+                    - call_operation: tosca.nodes.sdno.lifecycle.vxlan.terminate
                     - set_state: terminated
 
-    provisionViaCreated_workflow:
+    provisionViaCreated:
         description:
+        preconditions:
+            - target: vxlan
+            condition:
+                - assert:
+                    - state: [{valid_values: [nonesistent]]        
         steps:
             create_vxlan:
                 target: vxlan
@@ -191,8 +195,13 @@ workflows:
                     - inline: create_workflow
                     - inline: provision_workflow
     
-    deleteViaTerminated_workflow:
+    deleteViaTerminated:
         description:
+        preconditions:
+            - target: vxlan
+            condition:
+                - assert:
+                    - state: [{valid_values: [provisioned]}]
         steps:
             terminate_vxlan:
                 target: vxlan

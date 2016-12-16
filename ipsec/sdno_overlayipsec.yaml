@@ -55,21 +55,9 @@ topology_template:
             description: mgrIp of vCPE, should be provided by NFVO
 
     outputs:
-        getResultOut:
+        createId:
             type: string
-            value: {get_attribute: [vxlan, provResultRsp]}
-        createResultOut:
-            type: string
-            value: {get_attribute: [vxlan, createResultRsp]}
-        deleteResultOut:
-            type: string
-            value: {get_attribute: [vxlan, deleteResultRsp]}
-        getResultOut:
-            type: string
-            value: {get_attribute: [vxlan, getResultRsp]}
-        terminateResult:
-            type: string
-            value: {get_attribute: [vxlan, terminateResultRsp]}
+            value: {get_attribute: [ipsec, createId]}
     node_templates:
         vpc_ac:
             type: tosca.nodes.sdno.networkDevice.vpc
@@ -87,15 +75,11 @@ topology_template:
                 mgrIp: {get_input: vCPE_MgrIp}
         ipsec:
             type: tosca.nodes.sdno.networkService
-            description: VxLAN Access Network
+            description: ipsec Access Network
             properties:
                 name: {get_input: name}
-                connectionId: {get_input: connectionId}
             attributes:
-                provResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.ipsec, provison, resultResp]}
-                createResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.ipsec, create, resultResp]}  
-                deleteResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.ipsec, delete, resultResp]}  
-                getResultRsp: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.ipsec, get, resultResp]}
+                connectionId: {get_operation_output: [SELF, tosca.nodes.sdno.lifecycle.ipsec, create, resultResp]}
             interfaces:
                     tosca.nodes.sdno.lifecycle.ipsec:
                         operations:
@@ -119,8 +103,13 @@ topology_template:
 
 ####################################### workflow ##############################
 workflows:
-    create_workflow:
+    create:
         description: it will create ipsec specified in requests
+        preconditions:
+            - target: ipsec
+            condition:
+                - assert:
+                    - state: [{valid_values: [nonsistent]}]
         steps:
             create_ipsec:
                 target: ipsec
@@ -129,8 +118,13 @@ workflows:
                     - call_operation: tosca.nodes.sdno.lifecycle.create
                     - set_state: created
 
-    provision_workflow:
+    provision:
         description: it will provision ipsec specified in requests
+        preconditions:
+            - target: ipsec
+            condition:
+                - assert:
+                    - state: [{valid_values: [created]}]
         steps:
             provision_ipsec:
                 target: ipsec
@@ -139,8 +133,13 @@ workflows:
                     - call_operation: tosca.nodes.sdno.lifecycle.ipsec.provision
                     - set_state: provisioned
                     
-    delete_workflow:
+    delete:
         description: Delete a specified ipsec
+        preconditions:
+            - target: ipsec
+            condition:
+                - assert:
+                    - state: [{valid_values: [created, provisioned]}]
         steps:
             delete_ipsec:
                 target: ipsec
@@ -149,15 +148,25 @@ workflows:
                     - call_operation: tosca.sdno.node.lifecycle.ipsec.delete
                     - set_state: deleted
                     
-    get_workflow:
+    get:
         description: get connections from ipsec
+        preconditions:
+            - target: ipsec
+            condition:
+                - assert:
+                    - state: [{valid_values: [provisioned, created]}]
         steps:
             get_ipsec:
                 target: ipsec
                 activities:
                     - call_operation: tosca.nodes.sdno.lifecycle.ipsec.get
-    terminate_workflow:
+    terminate:
         description:
+        preconditions:
+            - target: ipsec
+            condition:
+                - assert:
+                    - state: [{valid_values: [created, provisioned]}]
         steps:
             terminate_ipsec:
                 target: ipsec
@@ -166,8 +175,13 @@ workflows:
                     - call_operation: tosca.nodes.sdno.lifecycle.ipsed.terminate
                     - set_state: terminated
 
-    provisionViaCreated_workflow:
+    provisionViaCreated:
         description:
+        preconditions:
+            - target: ipsec
+            condition:
+                - assert:
+                    - state: [{valid_values: [nonesistent]}]
         steps:
             create_ipsec:
                 target: ipsec
@@ -175,8 +189,13 @@ workflows:
                     - inline: create_workflow
                     - inline: provision_workflow
     
-    deleteViaTerminated_workflow:
+    deleteViaTerminated:
         description:
+        preconditions:
+            - target: ipsec
+            condition:
+                - assert:
+                    - state: [{valid_values: [provisioned]}]
         steps:
             terminate_ipsec:
                 target: ipsec

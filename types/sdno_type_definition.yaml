@@ -16,6 +16,9 @@ description: sdno basic types
 imports:
     - tosca_base_type_definition.yaml
 
+data_types:
+        
+    
 node_types:
     tosca.nodes.sdno.networkService:
         derived_from: tosca.nodes.root
@@ -42,7 +45,7 @@ node_types:
             description:
         delete:
             description:
-        get:            # not used
+        get:
             description:
         provision:
             description:
