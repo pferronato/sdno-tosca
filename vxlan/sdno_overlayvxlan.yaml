@@ -89,8 +89,11 @@ topology_template:
                         operations:
                             provision:
                                 implementation: scripts/rest/vxlan.swagger.jml
+                                # vpnConnections are not defined here as yaml because it can be found in the swagger spec as an artifact in the CSAR
+                                # this allows for more efficient parsing and mapping, because the REST/JSON is already set
                                 # inputs: {get_input: vpnConnections}
                             create:
+                                # here the operation does not need a networtk operation but rather an decomposition. + instance creation, + inventory update
                                 inputs: {get_input: vpnConnections}
                             delete:
                                 implementation: scripts/rest/vxlan.swagger.jml
@@ -205,5 +208,5 @@ workflows:
             terminate_vxlan:
                 target: vxlan
                 activities:
-                    - inline: terminate_workflow
-                    - inline: delete_workflow
+                    - inline: terminate
+                    - inline: delete

@@ -186,8 +186,8 @@ workflows:
             create_ipsec:
                 target: ipsec
                 activities:
-                    - inline: create_workflow
-                    - inline: provision_workflow
+                    - inline: create
+                    - inline: provision
     
     deleteViaTerminated:
         description:
@@ -200,6 +200,6 @@ workflows:
             terminate_ipsec:
                 target: ipsec
                 activities:
-                    - inline: terminate_workflow
-                    - inline: delete_workflow
+                    - inline: terminate
+                    - inline: delete
             

@@ -14,80 +14,77 @@
 tosca_definitions_version: tosca_simple_yaml_1_0
 description: sdno basic types
 
-# imports:
-#    - tosca_base_type_definition.yaml
-
+# *****************************************************************************
+# data types
+# *****************************************************************************
 data_types:
         
-    
+        
+# *****************************************************************************
+# node types
+# *****************************************************************************
 node_types:
     tosca.nodes.sdno.networkService:
         derived_from: tosca.nodes.Root
+        description:
         properties:
             name:
                type: string
-
-    tosca.nodes.sdno.networkService.vxlan:
-            derived_from: tosca.nodes.sdno.networkService
-            description: VxLAN Access Network
-            interfaces:
-                tosca.nodes.sdno.lifecycle.vxlan:
-                        create:
-                             description:
-                        delete:
-                             description:
-                        get:
-                             description: 
-                        provision:
-                             description:
-                        terminate:
-                             description:
-            properties:
-                siteVNI:
-                   type: string
-
+               required: false
+        interfaces:
+            tosca.nodes.sdno.lifecycle.networkService:
+                    create:
+                        description:
+                    delete:
+                        description:
+                    get:
+                        description: 
+                    provision:
+                        description:
+                    terminate:
+                        description:
+                    update:
+                        description:
 
     tosca.nodes.sdno.networkDevice:
         derived_from: tosca.nodes.Root
 
-    tosca.nodes.sdno.lifecycle.Ipsec:
-        derived_from: tosca.nodes.Root
-        interfaces:
-            sdno.interfaces:
-                create:
-                    description:
-                delete:
-                    description:
-                get:
-                    description:
-                provision:
-                    description:
-                terminate:
-                    description:
+    tosca.nodes.sdno.e2dc:
+        derived_from: tosca.nodes.sdno.networkService
+        description: it represents a non atomic network service
 
-    tosca.nodes.sdno.networkDevice.thinCPE: 
+        requirements:
+            - dependency: tosca.nodes.sdno.networkService
+        
+    tosca.nodes.sdno.networkDevice.ThinCPE: 
         derived_from: tosca.nodes.sdno.networkDevice
         description:
         properties:
             portvlan:
                 type: string
                 description:
+                required: true
             siteCidr:
                 type: string
                 description:
+                required: true
             siteThinCpeIP:
                 type: string
                 description:
+                required: true
 
-    tosca.nodes.sdno.networkDevice.vpc:
-        derived_from: tosca.nodes.sdno.networkDevice
+    tosca.nodes.sdno.networkDevice.Vpc:
+        derived_from: tosca.nodes.sdno.networkService
+        description:
         properties:
             vpcName:
                 type: string
                 description:
+                required: true
             dcGWIP:
                 type: string
                 description:
+                required: true
                 
     tosca.nodes.sdno.networkDevice.vCPE:
         derived_from: tosca.nodes.sdno.networkDevice
@@ -96,6 +93,29 @@ node_types:
             siteCidr:
                 type: string
                 description:
+                required: true
             mgrIp:
                 type: string
                 description:
+                required: true
+
+    tosca.nodes.sdno.networkservice.Vxlan:
+        type: tosca.nodes.sdno.networkService
+        description: VxLAN Access Network
+        properties:
+            siteVNI:
+                type: string
+                required: true
+        attributes:
+            connectionId:
+                type: string
+                required: true
+                
+    tosca.nodes.sdno.networkservice.Ipsec:
+        type: tosca.nodes.sdno.networkService
+        description: ipsec Access Network
+        properties:
+        attributes:
+            connectionId:
+                type: string
+                requied: true
